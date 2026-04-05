@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Mine minerals, hire workers, explore worlds. An idle mining adventure.">
+  <title>The Caves - Idle Mining Game</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="pictures/00.png">
+  <link rel="apple-touch-icon" href="pictures/00.png">
+</head>
+<body>
+  <div id="game">
+    <header>
+      <div class="header-content">
+        <h1>The Caves</h1>
+        <img src="pictures/0.png" alt="The Caves" class="header-logo">
+        <div id="resources">
+          <div class="resource ore-res">
+            <span class="res-icon">&#x26CF;&#xFE0F;</span>
+            <div class="res-details">
+              <span id="ore-count" class="res-value">0</span>
+              <span id="ore-rate" class="res-rate">0/s</span>
+            </div>
+          </div>
+          <div class="resource rm-res">
+            <span class="res-icon">&#x1F48E;</span>
+            <div class="res-details">
+              <span id="rm-count" class="res-value">0</span>
+              <span id="rm-bonus" class="res-rate"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <aside id="mine-area">
+        <div id="world-label">The Caves</div>
+        <div id="mine-window">
+          <!-- Mineral nodes spawn here dynamically -->
+          <div id="combo-display"></div>
+          <div id="rush-banner">ORE RUSH!</div>
+          <div id="rush-timer"></div>
+        </div>
+        <div id="mine-stats">
+          <span id="mine-workers">&#x1F477; 0</span>
+          <span id="mine-speed">&#x26A1; 0/s</span>
+        </div>
+        <div id="click-display">Click Power: 1</div>
+      </aside>
+
+      <section id="shop">
+        <nav class="tab-bar">
+          <button class="tab active" data-tab="stats">Stats</button>
+          <button class="tab" data-tab="workers">Workers</button>
+          <button class="tab" data-tab="minerals">Minerals</button>
+          <button class="tab" data-tab="worlds">Worlds</button>
+          <button class="tab" data-tab="prestige">Prestige</button>
+          <button class="tab" data-tab="settings">Settings</button>
+        </nav>
+        <div id="tab-panels">
+          <div id="panel-stats" class="panel active"></div>
+          <div id="panel-workers" class="panel"></div>
+          <div id="panel-minerals" class="panel"></div>
+          <div id="panel-worlds" class="panel"></div>
+          <div id="panel-prestige" class="panel">
+            <div id="prestige-info"></div>
+            <div id="prestige-upgrades-list"></div>
+          </div>
+          <div id="panel-settings" class="panel"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="milestone-container"></div>
+  <div id="notification-overlay" class="hidden">
+    <div id="notification-box">
+      <h2 id="notif-title"></h2>
+      <p id="notif-message"></p>
+      <button id="notif-close">OK</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js');
+    }
+  </script>
+</body>
+</html>

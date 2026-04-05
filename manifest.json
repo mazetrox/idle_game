@@ -1,0 +1,19 @@
+{
+  "name": "The Caves - Idle Mining Game",
+  "short_name": "The Caves",
+  "description": "Mine minerals, hire workers, explore worlds. An idle mining adventure.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0e17",
+  "theme_color": "#0a0e17",
+  "icons": [
+    {
+      "src": "pictures/00.png",
+      "sizes": "768x689",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

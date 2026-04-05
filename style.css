@@ -1,0 +1,625 @@
+/* ============================================================
+   DEEP MINE v2 - Minerals, Worlds, Workers
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-card: #1a2235;
+  --bg-card-hover: #1e2a42;
+  --bg-card-afford: #1a2a1a;
+  --text-primary: #e0e6f0;
+  --text-secondary: #8892a4;
+  --text-dim: #556070;
+  --ore-color: #f5a623;
+  --ore-glow: #f5a62344;
+  --rm-color: #00d4ff;
+  --rm-glow: #00d4ff44;
+  --accent: #4a9eff;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --border: #1e2a45;
+  --border-light: #2a3a5a;
+  /* Rarity colors */
+  --rarity-common: #aaaaaa;
+  --rarity-uncommon: #1eff00;
+  --rarity-rare: #0070ff;
+  --rarity-epic: #a335ee;
+  --rarity-legendary: #ff8000;
+  --rarity-mythic: #e6cc80;
+}
+
+html { font-size: 16px; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+/* ---------- Header ---------- */
+header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-content {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+h1 { display: none; }
+.header-logo {
+  height: 40px; width: auto; display: block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+#resources { display: flex; gap: 1rem; align-items: center; }
+.resource {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.3rem 0.6rem; border-radius: 6px;
+  background: var(--bg-primary); border: 1px solid var(--border);
+}
+.ore-res { border-color: var(--ore-glow); }
+.rm-res { border-color: var(--rm-glow); }
+.res-icon { font-size: 1.2rem; }
+.res-value { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ore-res .res-value { color: var(--ore-color); }
+.rm-res .res-value { color: var(--rm-color); }
+.res-rate { font-size: 0.72rem; color: var(--text-secondary); display: block; }
+
+/* ---------- Main Layout ---------- */
+main {
+  display: grid; grid-template-columns: 280px 1fr; gap: 0.75rem;
+  max-width: 1200px; margin: 0 auto; padding: 0.75rem;
+  min-height: calc(100vh - 52px);
+}
+
+/* ---------- Mine Area ---------- */
+#mine-area {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  position: sticky; top: 58px; height: fit-content;
+}
+#world-label {
+  font-size: 0.8rem; font-weight: 700; color: var(--ore-color);
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 0.3rem 0.8rem; border-radius: 4px;
+  background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.15);
+  width: 100%; text-align: center;
+}
+#mine-window {
+  width: 100%; aspect-ratio: 5/6; border-radius: 8px;
+  position: relative; overflow: hidden; cursor: crosshair;
+  border: 2px solid rgba(100,80,60,0.25);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.3);
+  transition: background 0.6s;
+}
+/* World backgrounds — real images with dark overlay for node visibility */
+#mine-window.world-caves {
+  background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.45)),
+    url('pictures/2.png') center/cover no-repeat;
+}
+#mine-window.world-coalpits {
+  background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.45)),
+    url('pictures/3.png') center/cover no-repeat;
+}
+#mine-window.world-crystal {
+  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)),
+    url('pictures/4.png') center/cover no-repeat;
+}
+#mine-window.world-dragon {
+  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)),
+    url('pictures/5.png') center/cover no-repeat;
+}
+#mine-window.world-void {
+  background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.4)),
+    url('pictures/6.png') center/cover no-repeat;
+}
+#mine-window.hit { animation: mine-shake 0.08s ease-out; }
+@keyframes mine-shake {
+  0%  { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100%{ transform: translateX(0); }
+}
+
+#mine-stats {
+  display: flex; justify-content: space-between; width: 100%;
+  font-size: 0.78rem; color: var(--text-secondary);
+  padding: 0.2rem 0.3rem;
+}
+#click-display {
+  font-size: 0.75rem; color: var(--ore-color); font-weight: 600;
+}
+
+/* ---------- Mineral Nodes ---------- */
+.mineral-node {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 2;
+  animation: node-spawn 0.3s ease-out;
+}
+@keyframes node-spawn {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+  100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+}
+.node-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 2.5; }
+.ring-progress { fill: none; stroke-width: 3; stroke-linecap: round; }
+.node-dot {
+  width: 50%; height: 50%; border-radius: 50%;
+  position: relative; z-index: 1;
+  box-shadow: 0 0 6px var(--node-glow, rgba(255,255,255,0.3));
+}
+.node-sprite {
+  width: 70%; height: 70%; object-fit: contain;
+  position: relative; z-index: 1; pointer-events: none;
+  filter: drop-shadow(0 0 5px var(--node-glow, rgba(255,255,255,0.3)));
+  border-radius: 4px;
+}
+.mineral-node.extracted {
+  animation: node-pop 0.45s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes node-pop {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  30%  { transform: translate(-50%,-50%) scale(1.6); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+}
+
+/* --- Bonus Node --- */
+.mineral-node.bonus-node {
+  z-index: 5; filter: drop-shadow(0 0 12px rgba(255,215,0,0.7));
+  animation: node-spawn 0.3s ease-out, bonus-pulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes bonus-pulse {
+  0%   { filter: drop-shadow(0 0 10px rgba(255,215,0,0.6)); }
+  100% { filter: drop-shadow(0 0 22px rgba(255,215,0,1)); }
+}
+.bonus-node .ring-progress { stroke: #ffd700 !important; stroke-width: 4 !important; }
+.bonus-node .bonus-countdown {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  border: 3px solid rgba(255,215,0,0.6);
+  animation: bonus-shrink var(--bonus-time, 8s) linear forwards;
+}
+@keyframes bonus-shrink {
+  0%   { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+.bonus-node .bonus-label {
+  position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+  font-size: 0.6rem; font-weight: 800; color: #ffd700; white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9); letter-spacing: 0.05em;
+  animation: bonus-label-bob 0.6s ease-in-out infinite alternate;
+}
+@keyframes bonus-label-bob {
+  0%   { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-4px); }
+}
+
+/* --- Combo Display --- */
+#combo-display {
+  position: absolute; top: 6px; right: 6px; z-index: 15;
+  font-weight: 900; font-size: 1.1rem; color: #ffd700;
+  text-shadow: 0 0 8px rgba(255,215,0,0.5), 0 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none; opacity: 0; transition: opacity 0.2s;
+}
+#combo-display.visible { opacity: 1; }
+#combo-display.pop { animation: combo-pop 0.15s ease-out; }
+@keyframes combo-pop {
+  0%   { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* --- Ore Rush --- */
+#mine-window.ore-rush {
+  border-color: #ffd700 !important;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.4), 0 0 20px rgba(255,215,0,0.4) !important;
+}
+#rush-banner {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  text-align: center; padding: 4px 0;
+  background: linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent);
+  font-weight: 900; font-size: 0.85rem; color: #ffd700; letter-spacing: 0.15em;
+  text-shadow: 0 0 10px rgba(255,215,0,0.6);
+  pointer-events: none; display: none;
+}
+#mine-window.ore-rush #rush-banner { display: block; animation: rush-flash 0.5s ease-in-out infinite alternate; }
+@keyframes rush-flash {
+  0%   { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+#rush-timer {
+  position: absolute; bottom: 0; left: 0; height: 3px; z-index: 20;
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  pointer-events: none; transition: width 0.1s linear; display: none;
+}
+#mine-window.ore-rush #rush-timer { display: block; }
+
+/* --- Lucky Drop --- */
+.mine-float.lucky {
+  color: #ffd700; font-size: 1rem;
+  text-shadow: 0 0 10px rgba(255,215,0,0.6), 0 2px 4px rgba(0,0,0,0.8);
+}
+.mine-float.jackpot {
+  color: #ff4444; font-size: 1.3rem;
+  text-shadow: 0 0 12px rgba(255,50,50,0.6), 0 0 20px rgba(255,215,0,0.4);
+  animation: mfloat 1.2s ease-out forwards;
+}
+
+/* --- Milestone Toast --- */
+#milestone-container {
+  position: fixed; bottom: 12px; right: 12px; z-index: 200;
+  display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+}
+.milestone-toast {
+  padding: 0.5rem 0.8rem; border-radius: 6px;
+  background: rgba(17,24,39,0.95); border: 1px solid var(--ore-glow);
+  color: var(--text-primary); font-size: 0.78rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  animation: toast-in 0.3s ease-out, toast-out 0.4s 2.6s ease-in forwards;
+  max-width: 260px;
+}
+.milestone-toast .mt-title { font-weight: 700; color: var(--ore-color); }
+.milestone-toast .mt-reward { font-size: 0.7rem; color: var(--success); }
+@keyframes toast-in {
+  0%   { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes toast-out {
+  0%   { opacity: 1; }
+  100% { opacity: 0; transform: translateY(10px); }
+}
+
+/* Mine float text */
+.mine-float {
+  position: absolute; z-index: 10; pointer-events: none; white-space: nowrap;
+  font-weight: 700; font-size: 0.8rem; color: var(--ore-color);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  animation: mfloat 0.9s ease-out forwards;
+}
+.mine-float.crit { color: #ff4444; font-size: 1.1rem; text-shadow: 0 0 8px rgba(255,50,50,0.5); }
+.mine-float.mineral-name { color: var(--text-primary); font-size: 0.7rem; font-weight: 600; }
+@keyframes mfloat {
+  0%   { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, -55px); opacity: 0; }
+}
+
+/* ---------- Shop / Tabs ---------- */
+#shop { display: flex; flex-direction: column; min-height: 0; }
+.tab-bar {
+  display: flex; gap: 1px; background: var(--bg-secondary);
+  border-radius: 8px 8px 0 0; overflow: hidden;
+  border: 1px solid var(--border); border-bottom: none;
+}
+.tab {
+  flex: 1; padding: 0.55rem 0.3rem; font-size: 0.78rem; font-weight: 600;
+  color: var(--text-secondary); background: transparent; border: none;
+  cursor: pointer; transition: all 0.15s; position: relative;
+}
+.tab:hover { color: var(--text-primary); background: var(--bg-card); }
+.tab.active { color: var(--ore-color); background: var(--bg-card); }
+.tab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 15%; width: 70%;
+  height: 2px; background: var(--ore-color); border-radius: 1px;
+}
+#tab-panels {
+  flex: 1; background: var(--bg-secondary); border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 8px 8px;
+  overflow-y: auto; max-height: calc(100vh - 120px);
+}
+.panel { display: none; padding: 0.6rem; }
+.panel.active { display: block; }
+
+/* ---------- Stat Cards ---------- */
+.stat-card {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem; margin-bottom: 0.35rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+  transition: border-color 0.15s;
+}
+.stat-card.affordable { border-color: var(--border-light); background: var(--bg-card-afford); }
+.stat-card.affordable:hover { border-color: var(--success); }
+.stat-card.maxed { opacity: 0.5; }
+.stat-icon { font-size: 1.6rem; width: 2.2rem; text-align: center; flex-shrink: 0; }
+.stat-info { flex: 1; min-width: 0; }
+.stat-name { font-weight: 700; font-size: 0.85rem; }
+.stat-level { font-size: 0.72rem; color: var(--text-dim); }
+.stat-effect { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+.stat-effect .next { color: var(--success); font-weight: 600; }
+.stat-buy {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0.4rem 0.6rem; min-width: 72px;
+  background: var(--success); color: #fff; border: none; border-radius: 5px;
+  cursor: pointer; font-weight: 600; transition: all 0.15s; flex-shrink: 0;
+}
+.stat-buy:hover:not(.disabled) { background: #27ae60; transform: translateY(-1px); }
+.stat-buy.disabled { background: var(--bg-card); color: var(--text-dim); cursor: not-allowed; border: 1px solid var(--border); }
+.stat-buy .cost { font-size: 0.7rem; opacity: 0.9; }
+
+/* ---------- Worker Panel ---------- */
+.worker-summary {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.5rem 0.6rem; margin-bottom: 0.4rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+}
+.worker-summary .count { font-size: 1.1rem; font-weight: 700; color: var(--ore-color); }
+
+/* Worker type hire cards */
+.worker-type-card {
+  padding: 0.5rem 0.6rem; margin-bottom: 0.35rem;
+  background: var(--bg-card); border-radius: 6px;
+  border: 1px solid var(--border); border-left: 3px solid var(--rarity-common);
+  transition: border-color 0.15s;
+}
+.worker-type-card[data-rarity="uncommon"] { border-left-color: var(--rarity-uncommon); }
+.worker-type-card[data-rarity="rare"]     { border-left-color: var(--rarity-rare); }
+.worker-type-card[data-rarity="epic"]     { border-left-color: var(--rarity-epic); }
+.worker-type-card[data-rarity="legendary"]{ border-left-color: var(--rarity-legendary); }
+.wt-header { display: flex; justify-content: space-between; align-items: baseline; }
+.wt-name { font-weight: 700; font-size: 0.85rem; }
+.wt-power { font-size: 0.75rem; font-weight: 700; color: var(--ore-color); }
+.wt-desc { font-size: 0.7rem; color: var(--text-dim); margin: 2px 0; }
+.wt-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-top: 4px; flex-wrap: wrap; }
+.wt-cost { display: flex; gap: 0.4rem; flex-wrap: wrap; font-size: 0.72rem; }
+.wt-ore-cost { color: var(--ore-color); font-weight: 600; }
+.wt-mineral-cost { font-weight: 600; color: var(--success); }
+.wt-mineral-cost.short { color: var(--danger); }
+.wt-owned { font-size: 0.7rem; color: var(--text-secondary); }
+.wt-hire {
+  padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700;
+  background: var(--success); color: #fff; border: none; border-radius: 4px;
+  cursor: pointer; transition: all 0.15s;
+}
+.wt-hire:hover:not(.disabled) { background: #27ae60; }
+.wt-hire.disabled { background: var(--bg-card); color: var(--text-dim); cursor: not-allowed; border: 1px solid var(--border); }
+
+/* World worker assignment */
+.world-worker-card {
+  padding: 0.5rem 0.6rem; margin-bottom: 0.3rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+}
+.world-worker-card.current { border-color: var(--ore-glow); }
+.ww-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.ww-name { font-weight: 600; font-size: 0.85rem; }
+.ww-power { font-size: 0.7rem; color: var(--text-dim); }
+.ww-type-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
+.ww-type-name { font-size: 0.75rem; color: var(--text-secondary); }
+.ww-count { color: var(--ore-color); font-weight: 700; font-size: 0.85rem; margin: 0 0.4rem; min-width: 2ch; text-align: center; }
+.ww-controls { display: flex; gap: 0.25rem; }
+.assign-all-btn {
+  width: 100%; margin-top: 5px; padding: 0.35rem; font-size: 0.75rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; border-radius: 4px;
+  cursor: pointer; transition: all 0.15s;
+}
+.assign-all-btn:hover:not(.disabled) { background: #3a8aef; }
+.assign-all-btn.disabled { background: var(--bg-card); color: var(--text-dim); cursor: not-allowed; border: 1px solid var(--border); }
+.ww-btn {
+  width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border);
+  background: var(--bg-card-hover); color: var(--text-primary);
+  cursor: pointer; font-size: 1rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; transition: all 0.1s;
+}
+.ww-btn:hover:not(.disabled) { border-color: var(--accent); background: var(--accent); color: #fff; }
+.ww-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ---------- Mineral Inventory ---------- */
+.mineral-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.4rem;
+}
+.mineral-item {
+  display: flex; align-items: center; gap: 0.45rem;
+  padding: 0.45rem; border-radius: 5px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-left: 3px solid var(--rarity-common);
+}
+.mineral-item[data-rarity="uncommon"] { border-left-color: var(--rarity-uncommon); }
+.mineral-item[data-rarity="rare"]     { border-left-color: var(--rarity-rare); }
+.mineral-item[data-rarity="epic"]     { border-left-color: var(--rarity-epic); }
+.mineral-item[data-rarity="legendary"]{ border-left-color: var(--rarity-legendary); }
+.mineral-item[data-rarity="mythic"]   { border-left-color: var(--rarity-mythic); }
+.mineral-item .mi-icon { font-size: 1.2rem; }
+.mineral-item .mi-sprite { width: 38px; height: 38px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+.mineral-item .mi-info { flex: 1; min-width: 0; }
+.mineral-item .mi-name { font-size: 0.78rem; font-weight: 600; }
+.mineral-item .mi-count { font-size: 0.85rem; font-weight: 700; color: var(--ore-color); }
+.mineral-item .mi-val { font-size: 0.65rem; color: var(--text-dim); }
+
+.sell-all-btn {
+  margin-top: 0.5rem; padding: 0.5rem 1rem; width: 100%;
+  background: var(--bg-card); color: var(--ore-color);
+  border: 1px solid var(--ore-glow); border-radius: 5px;
+  cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.15s;
+}
+.sell-all-btn:hover { background: rgba(245,166,35,0.1); }
+.sell-all-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ---------- World Cards ---------- */
+.world-card {
+  padding: 0.7rem; margin-bottom: 0.4rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+  transition: all 0.15s;
+}
+.world-card.current { border-color: var(--ore-color); background: rgba(245,166,35,0.04); }
+.world-card.locked { opacity: 0.45; }
+.wc-thumb {
+  width: 100%; height: 60px; border-radius: 5px; overflow: hidden; margin-bottom: 0.4rem;
+  background-size: cover; background-position: center;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.world-card.locked .wc-thumb { filter: grayscale(0.7) brightness(0.5); }
+.wc-header { display: flex; justify-content: space-between; align-items: center; }
+.wc-name { font-weight: 700; font-size: 0.95rem; }
+.wc-badge {
+  font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 3px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.wc-badge.current { background: var(--ore-color); color: #000; }
+.wc-badge.idle { background: var(--border-light); color: var(--text-secondary); }
+.wc-badge.locked-badge { background: var(--danger); color: #fff; }
+.wc-desc { font-size: 0.75rem; color: var(--text-secondary); margin: 0.3rem 0; }
+.wc-minerals { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.3rem 0; }
+.wc-mineral-tag {
+  font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 3px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+}
+.wc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; }
+.wc-stats { font-size: 0.75rem; color: var(--text-dim); }
+.warp-btn {
+  padding: 0.4rem 1rem; border-radius: 5px; border: none;
+  font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.warp-btn.warp { background: var(--accent); color: #fff; }
+.warp-btn.warp:hover { background: #3a8aef; transform: translateY(-1px); }
+.warp-btn.unlock { background: var(--success); color: #fff; }
+.warp-btn.unlock:hover { background: #27ae60; }
+.warp-btn.current-btn { background: var(--bg-card-hover); color: var(--text-dim); cursor: default; }
+.warp-btn.disabled { background: var(--bg-card); color: var(--text-dim); cursor: not-allowed; border: 1px solid var(--border); }
+
+/* ---------- Prestige ---------- */
+.prestige-section { text-align: center; padding: 0.8rem 0.5rem; margin-bottom: 0.8rem; }
+.prestige-section h3 { font-size: 1.2rem; color: var(--rm-color); margin-bottom: 0.4rem; }
+.prestige-section p { font-size: 0.8rem; color: var(--text-secondary); max-width: 500px; margin: 0 auto 0.8rem; line-height: 1.4; }
+.prestige-stats { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.8rem; }
+.rm-highlight { color: var(--rm-color); font-weight: 700; }
+.ore-highlight { color: var(--ore-color); font-weight: 700; }
+.prestige-gain { font-size: 1rem; font-weight: 600; margin-bottom: 0.8rem; }
+#prestige-btn {
+  padding: 0.6rem 1.8rem; font-size: 0.95rem; font-weight: 700;
+  border: 2px solid var(--rm-color); border-radius: 8px;
+  cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.04em;
+}
+#prestige-btn.prestige-ready { background: linear-gradient(135deg, #00a5cc, #00d4ff); color: #000; box-shadow: 0 0 18px var(--rm-glow); }
+#prestige-btn.prestige-ready:hover { transform: translateY(-2px); box-shadow: 0 0 28px var(--rm-glow); }
+#prestige-btn.disabled { background: var(--bg-card); color: var(--text-dim); border-color: var(--border); cursor: not-allowed; box-shadow: none; }
+#panel-prestige h3 { font-size: 0.95rem; color: var(--text-primary); margin: 0.8rem 0 0.4rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+
+/* Prestige upgrade cards reuse upg-card style */
+.upg-card {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem; margin-bottom: 0.3rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; transition: all 0.15s;
+}
+.upg-card.affordable { border-color: var(--border-light); background: var(--bg-card-afford); }
+.upg-card.affordable:hover { border-color: var(--success); }
+.upg-card.owned { opacity: 0.5; border-color: var(--success); background: rgba(46,204,113,0.04); }
+.upg-info { flex: 1; }
+.upg-name { font-weight: 600; font-size: 0.85rem; }
+.upg-desc { font-size: 0.72rem; color: var(--text-secondary); margin-top: 1px; }
+.upg-buy {
+  padding: 0.4rem 0.6rem; background: var(--rm-color); color: #000;
+  border: none; border-radius: 5px; cursor: pointer; font-weight: 600;
+  transition: all 0.15s; flex-shrink: 0; min-width: 65px; text-align: center;
+}
+.upg-buy:hover:not(.disabled) { background: #33ddff; }
+.upg-buy.disabled { background: var(--bg-card); color: var(--text-dim); cursor: not-allowed; border: 1px solid var(--border); }
+.buy-cost { font-size: 0.7rem; }
+
+/* ---------- Settings ---------- */
+.settings-section { margin-bottom: 1.2rem; }
+.settings-section h3 { font-size: 0.95rem; margin-bottom: 0.5rem; padding-bottom: 0.2rem; border-bottom: 1px solid var(--border); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 0.8rem; font-size: 0.82rem; }
+.stats-grid div:nth-child(odd) { color: var(--text-secondary); }
+.stats-grid div:nth-child(even) { color: var(--text-primary); font-weight: 600; text-align: right; }
+.settings-buttons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.settings-buttons button {
+  padding: 0.4rem 0.8rem; font-size: 0.82rem; font-weight: 600;
+  background: var(--bg-card); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 5px; cursor: pointer; transition: all 0.15s;
+}
+.settings-buttons button:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.settings-buttons button.danger { border-color: var(--danger); color: var(--danger); }
+.settings-buttons button.danger:hover { background: rgba(231,76,60,0.12); }
+
+.empty-message { text-align: center; color: var(--text-dim); padding: 1.5rem; font-size: 0.85rem; }
+.section-label { font-size: 0.8rem; color: var(--text-dim); margin: 0.6rem 0 0.3rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ---------- Code Input & Admin ---------- */
+.code-input-row {
+  display: flex; gap: 0.4rem;
+}
+#code-input {
+  flex: 1; padding: 0.45rem 0.6rem; font-size: 0.85rem; font-family: monospace;
+  background: var(--bg-primary); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 5px; outline: none;
+  transition: border-color 0.15s;
+}
+#code-input:focus { border-color: var(--accent); }
+#code-input::placeholder { color: var(--text-dim); }
+#code-btn {
+  padding: 0.45rem 0.8rem; font-size: 0.82rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; border-radius: 5px;
+  cursor: pointer; transition: background 0.15s;
+}
+#code-btn:hover { background: #3a8aef; }
+.code-msg { font-size: 0.78rem; margin-top: 0.3rem; }
+.code-msg.success { color: var(--success); }
+.code-msg.error { color: var(--danger); }
+
+.admin-section { border: 1px solid var(--danger); border-radius: 6px; padding: 0.6rem; background: rgba(231,76,60,0.04); }
+.admin-section h3 { color: var(--danger); border-bottom-color: rgba(231,76,60,0.2); }
+.admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.35rem; }
+.admin-btn {
+  padding: 0.45rem 0.4rem; font-size: 0.78rem; font-weight: 600;
+  background: rgba(231,76,60,0.12); color: var(--danger);
+  border: 1px solid rgba(231,76,60,0.25); border-radius: 5px;
+  cursor: pointer; transition: all 0.15s;
+}
+.admin-btn:hover { background: rgba(231,76,60,0.25); border-color: var(--danger); }
+
+/* Simulator */
+.sim-controls {
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;
+}
+.sim-controls label {
+  font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.3rem;
+}
+.sim-controls select {
+  padding: 0.3rem 0.4rem; font-size: 0.8rem;
+  background: var(--bg-primary); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 4px; outline: none;
+}
+#sim-canvas {
+  width: 100%; height: auto; max-height: 260px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg-primary);
+}
+#sim-summary {
+  font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem; line-height: 1.5;
+}
+#sim-summary strong { color: var(--ore-color); }
+
+/* ---------- Notification ---------- */
+#notification-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(3px); }
+#notification-overlay.hidden { display: none; }
+#notification-box { background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: 10px; padding: 1.5rem; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+#notif-title { font-size: 1.15rem; color: var(--ore-color); margin-bottom: 0.5rem; }
+#notif-message { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.2rem; line-height: 1.45; }
+#notif-close { padding: 0.4rem 1.5rem; font-size: 0.85rem; font-weight: 600; background: var(--accent); color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+#notif-close:hover { background: #3a8aef; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  main { grid-template-columns: 1fr; padding: 0.4rem; }
+  #mine-area {
+    position: relative; top: 0;
+    flex-direction: column; align-items: center; gap: 0.4rem;
+    padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);
+  }
+  #mine-window { width: 100%; aspect-ratio: 4/3; }
+  #world-label { width: 100%; }
+  #mine-stats { width: 100%; }
+  .header-content { flex-direction: column; gap: 0.3rem; }
+  h1 { font-size: 1.1rem; }
+  #resources { width: 100%; justify-content: center; }
+  .resource { flex: 1; justify-content: center; }
+  #tab-panels { max-height: none; }
+  .tab { font-size: 0.7rem; padding: 0.45rem 0.2rem; }
+  .mineral-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}
